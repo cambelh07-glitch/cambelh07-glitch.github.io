@@ -1,6 +1,6 @@
 /* Colors and fonts. Change these variables to restyle the whole site. */
 :root {
-  --bg: #fbfaf7;
+  --bg: #ffffff;
   --surface: #ffffff;
   --text: #1d2430;
   --muted: #5b6573;
@@ -11,23 +11,12 @@
   --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
   --sans: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #14181f;
-    --surface: #1b212a;
-    --text: #e7e9ec;
-    --muted: #a3acb9;
-    --line: #2c3440;
-    --accent: #8db8e3;
-    --accent-soft: #1f2b3a;
-  }
-}
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
-  background: var(--bg);
+  background: #ffffff;
   color: var(--text);
   font-family: var(--sans);
   font-size: 17px;
@@ -38,6 +27,17 @@ a:hover { text-decoration-thickness: 2px; }
 img { max-width: 100%; height: auto; display: block; }
 
 .wrap { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+
+/* Animated transit-line background (assets/img/metro-lines.svg) */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1;
+  background: #ffffff url("img/metro-lines.svg") center / cover no-repeat;
+}
+main.wrap {
+  background: rgba(255, 255, 255, 0.9);
+  border-left: 1px solid var(--line); border-right: 1px solid var(--line);
+  padding-bottom: 8px;
+}
 
 /* Header and navigation */
 .site-header { border-bottom: 1px solid var(--line); background: var(--surface); }
@@ -104,4 +104,4 @@ thead th { color: var(--muted); font-weight: 600; }
 tr.total td { font-weight: 700; }
 .note { background: var(--accent-soft); border-radius: 10px; padding: 16px 18px; font-size: 0.95rem; }
 
-footer { border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 0.9rem; }
+footer { background: rgba(255, 255, 255, 0.9); border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 0.9rem; }
