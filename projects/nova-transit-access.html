@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Northern Virginia Transit Access | Cambel Hurst</title>
+  <meta name="description" content="How scheduled weekday transit service is distributed across Northern Virginia's jurisdictions and communities.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Cambel Hurst</a>
+    <nav class="nav">
+      <a href="../index.html#projects">Projects</a>
+      <a href="../index.html#experience">Experience</a>
+      <a href="../index.html#writing">Writing</a>
+      <a href="../index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="project-header">
+    <p class="meta">Independent project | September 2026</p>
+    <h1>Northern Virginia Transit Access Analysis</h1>
+    <p>How much scheduled weekday transit service is within walking distance of where people live, and how does it differ across jurisdictions and population groups? This analysis covers nine jurisdictions, 1,565 block groups, and about 2.56 million residents, using published schedules for Wednesday, October 14, 2026.</p>
+    <div class="links">
+      <!-- Restore these two buttons once the report is cleared and the novata code repository is public:
+      <a class="btn primary" href="../assets/docs/NoVA_Transit_Access_Report.pdf">Full report (PDF)</a>
+      <a class="btn" href="https://github.com/cambelh07-glitch/novata">Code on GitHub</a>
+      -->
+    </div>
+  </div>
+
+  <section>
+    <h2>Key findings</h2>
+    <ul class="findings">
+      <li><strong>Service is concentrated in the inner jurisdictions.</strong> Arlington (73.9) and Alexandria (66.6) have access index values about 38 to 58 times those of Loudoun (1.76) and Prince William (1.27).</li>
+      <li><strong>Frequent service follows the same pattern.</strong> 79 percent of Arlington residents and 86 percent of Alexandria residents live near a stop with service every 15 minutes or better in the morning peak, compared with 4 percent in Loudoun and Prince William.</li>
+      <li><strong>Within jurisdictions, minority residents have equal or greater access</strong> than other residents in eight of nine jurisdictions.</li>
+      <li><strong>Across the region,</strong> low-income residents and zero-vehicle households have more access than everyone else, and minority residents and other residents are nearly identical (17.4 compared with 17.7).</li>
+      <li><strong>Coverage and frequency are not the same thing.</strong> The City of Fairfax has a moderate index (15.0), but only 5 percent of its residents live near frequent service.</li>
+    </ul>
+    <p>The main divide in access is geographic rather than demographic: where someone lives in the region matters far more than who they are within their jurisdiction.</p>
+  </section>
+
+  <section>
+    <h2>Maps</h2>
+    <figure>
+      <img src="../assets/img/map1.png" alt="Map of Northern Virginia block groups shaded by AM peak transit service intensity, highest in Arlington, Alexandria, and along Metrorail corridors in Fairfax County.">
+      <figcaption>Map 1. Weekday transit service intensity by block group, AM peak (6:00 to 9:00 a.m.).</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/img/map2.png" alt="Three map panels at 1:150,000 comparing service intensity in Arlington and Alexandria, eastern Loudoun County, and eastern Prince William County.">
+      <figcaption>Map 2. Inner and outer jurisdictions at the same scale (1:150,000). Even the best-served parts of the outer counties fall far below Arlington and Alexandria.</figcaption>
+    </figure>
+    <figure>
+      <img src="../assets/img/map3.png" alt="Map of block groups shaded by minority share of residents, with stops that have four or more AM peak departures per hour shown as orange points.">
+      <figcaption>Map 3. Minority share of residents by block group, with the 1,867 stops and stations that have frequent AM peak service.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>Results by jurisdiction</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Jurisdiction</th><th>Population</th><th>Minority share</th><th>Access index</th><th>Near frequent service</th></tr></thead>
+        <tbody>
+          <tr><td>Arlington</td><td>236,254</td><td>42%</td><td>73.9</td><td>79%</td></tr>
+          <tr><td>Alexandria</td><td>156,976</td><td>51%</td><td>66.6</td><td>86%</td></tr>
+          <tr><td>Falls Church</td><td>14,710</td><td>32%</td><td>21.6</td><td>56%</td></tr>
+          <tr><td>Fairfax City</td><td>25,026</td><td>49%</td><td>15.0</td><td>5%</td></tr>
+          <tr><td>Fairfax County</td><td>1,147,837</td><td>53%</td><td>13.0</td><td>28%</td></tr>
+          <tr><td>Loudoun</td><td>432,998</td><td>49%</td><td>1.76</td><td>4%</td></tr>
+          <tr><td>Manassas Park</td><td>16,798</td><td>74%</td><td>1.52</td><td>0%</td></tr>
+          <tr><td>Manassas</td><td>42,976</td><td>67%</td><td>1.48</td><td>1%</td></tr>
+          <tr><td>Prince William</td><td>488,880</td><td>62%</td><td>1.27</td><td>4%</td></tr>
+          <tr class="total"><td>Study area</td><td>2,562,455</td><td>53%</td><td>17.6</td><td>27%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="meta">AM peak (6:00 to 9:00 a.m.). Values are population-weighted.</p>
+  </section>
+
+  <section>
+    <h2>Methods</h2>
+    <p><strong>Data.</strong> GTFS schedules from eight providers (nine feeds: WMATA Metrorail and Metrobus, Fairfax Connector, ART, DASH, CUE, Loudoun County Transit, OmniRide, and VRE), 2020 Census block populations, and 2020-2024 American Community Survey estimates.</p>
+    <p><strong>Service.</strong> I counted scheduled departures at every stop in the morning peak and converted them to trips per hour, grouping rail platforms under their stations.</p>
+    <p><strong>Access.</strong> For each populated Census block, I summed trips per hour at bus stops within a quarter mile and rail stations within a half mile, then averaged blocks up to block groups weighted by population. A block counts as near frequent service if a nearby stop has four or more departures per hour.</p>
+    <p><strong>Comparisons.</strong> I compared access for minority residents, low-income residents, and zero-vehicle households with everyone else, both across the region and within each jurisdiction.</p>
+    <p><strong>Limitations.</strong> The index measures service intensity rather than trips to destinations, uses straight-line distances, and understates commuter bus and VRE service that riders reach by car. The full report covers these in detail.</p>
+  </section>
+
+  <section>
+    <h2>Tools and disclosure</h2>
+    <p>R (tidytransit, tidycensus, sf, dplyr), ArcGIS Pro, GTFS, and Census data.</p>
+    <p class="note">I used Claude, an AI assistant made by Anthropic, throughout the project. Claude wrote the R scripts to my specifications, so that they carried out the methodology I designed, retrieved the GTFS schedule data, and accessed the WMATA API. I reviewed and tested the code to confirm that it works. Claude also helped move the results from R into ArcGIS Pro for mapping. Using AI made the work faster and easier than standard methods would have, and I am responsible for the analysis, its interpretation, and the findings.</p>
+    <p class="meta">This is an independent project that uses only public data. It is not a product of, and does not represent the views of, any transit agency.</p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap"><a href="../index.html">Back to home</a></div>
+</footer>
+
+</body>
+</html>
