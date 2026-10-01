@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <style>
+    .line  { fill: none; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; opacity: 0.3; }
+    .train { fill: none; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; opacity: 0.85;
+             stroke-dasharray: 30 470; animation: run linear infinite; }
+    .rev   { animation-direction: reverse; }
+    .stn   { fill: #ffffff; stroke: #9aa3ad; stroke-width: 3; opacity: 0.9; }
+    @keyframes run { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+    @media (prefers-reduced-motion: reduce) { .train { animation: none; opacity: 0; } }
+  </style>
+
+  <defs>
+    <path id="red"    d="M-50 150 H380 L560 330 H1040 L1220 150 H1650"/>
+    <path id="orange" d="M-50 520 H120 L300 700 H1300 L1480 520 H1650"/>
+    <path id="silver" d="M-50 714 H1650"/>
+    <path id="blue"   d="M-50 900 H128 L300 728 H1300 L1472 900 H1650"/>
+    <path id="green"  d="M780 -50 V380 L960 560 V1050"/>
+    <path id="yellow" d="M794 -50 V374 L974 554 V1050"/>
+  </defs>
+
+  <!-- Route lines -->
+  <use href="#red"    class="line" stroke="#BF0D3E"/>
+  <use href="#orange" class="line" stroke="#ED8B00"/>
+  <use href="#silver" class="line" stroke="#919D9D"/>
+  <use href="#blue"   class="line" stroke="#009CDE"/>
+  <use href="#green"  class="line" stroke="#00B140"/>
+  <use href="#yellow" class="line" stroke="#FFD100"/>
+
+  <!-- Moving trains -->
+  <path d="M-50 150 H380 L560 330 H1040 L1220 150 H1650" pathLength="1000" class="train" stroke="#BF0D3E" style="animation-duration:26s"/>
+  <path d="M-50 520 H120 L300 700 H1300 L1480 520 H1650" pathLength="1000" class="train rev" stroke="#ED8B00" style="animation-duration:30s"/>
+  <path d="M-50 714 H1650" pathLength="1000" class="train" stroke="#919D9D" style="animation-duration:22s;animation-delay:-7s"/>
+  <path d="M-50 900 H128 L300 728 H1300 L1472 900 H1650" pathLength="1000" class="train rev" stroke="#009CDE" style="animation-duration:28s;animation-delay:-12s"/>
+  <path d="M780 -50 V380 L960 560 V1050" pathLength="1000" class="train" stroke="#00B140" style="animation-duration:18s;animation-delay:-4s"/>
+  <path d="M794 -50 V374 L974 554 V1050" pathLength="1000" class="train rev" stroke="#FFD100" style="animation-duration:20s;animation-delay:-9s"/>
+
+  <!-- Stations -->
+  <rect class="stn" x="768" y="320" width="38" height="20" rx="10"/>
+  <circle class="stn" cx="560" cy="330" r="8"/>
+  <circle class="stn" cx="1040" cy="330" r="8"/>
+  <circle class="stn" cx="380" cy="150" r="8"/>
+  <circle class="stn" cx="1220" cy="150" r="8"/>
+  <rect class="stn" x="290" y="690" width="20" height="48" rx="10"/>
+  <rect class="stn" x="950" y="690" width="34" height="48" rx="12"/>
+  <rect class="stn" x="1290" y="690" width="20" height="48" rx="10"/>
+  <circle class="stn" cx="600" cy="714" r="8"/>
+  <circle class="stn" cx="120" cy="520" r="8"/>
+  <circle class="stn" cx="1472" cy="900" r="8"/>
+</svg>
