@@ -5,10 +5,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cambel Hurst | Transportation Planning and Policy</title>
   <meta name="description" content="Portfolio of Cambel Hurst, MPP candidate at George Mason University focused on transit planning, regional growth, and transportation policy in Northern Virginia.">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/img/icon-32.png">
+  <link rel="apple-touch-icon" href="assets/img/icon-180.png">
+  <meta name="theme-color" content="#1f4e79">
+  <!-- Link preview (LinkedIn, email, texts) -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cambelh07-glitch.github.io/">
+  <meta property="og:title" content="Cambel Hurst | Transportation Planning and Policy">
+  <meta property="og:description" content="Portfolio of Cambel Hurst: transit planning, GIS and R analysis, and transportation policy in Northern Virginia.">
+  <meta property="og:image" content="https://cambelh07-glitch.github.io/assets/img/og-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Cambel Hurst, transportation planning and policy, Northern Virginia">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=4">
+  <link rel="stylesheet" href="assets/style.css?v=5">
   <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
@@ -18,8 +32,8 @@
     <a class="brand" href="index.html">Cambel Hurst</a>
     <nav class="nav">
       <a href="#projects">Projects</a>
+      <a href="#writing">Writing</a>
       <a href="#resume">Résumé</a>
-      <a href="#skills">Skills</a>
       <a href="#contact">Contact</a>
     </nav>
   </div>
@@ -44,7 +58,7 @@
   <section id="projects">
     <h2>Projects</h2>
 
-    <article class="card feature">
+    <article class="card feature anim-card">
       <div>
         <h3><a href="projects/nova-transit-access.html">Northern Virginia Transit Access Analysis</a></h3>
         <p class="meta">Independent project | September 2026 | R, ArcGIS Pro, GTFS, ACS</p>
@@ -55,13 +69,29 @@
       <a href="projects/nova-transit-access.html"><img src="assets/img/map2.png" alt="Three map panels at equal scale comparing transit service intensity in Arlington and Alexandria, eastern Loudoun County, and eastern Prince William County."></a>
     </article>
 
-    <article class="card">
+    <article class="card anim-card">
       <h3>Data Center Siting and Transmission Infrastructure</h3>
       <p class="meta">Case-control study | ArcGIS Pro, statistical testing</p>
       <p>Compared the distance from 199 data centers to high-voltage transmission lines against a set of control sites. Data centers sat a median of 1,377 feet from transmission lines, compared with 3,101 feet for controls, a difference confirmed with a Mann-Whitney U test (p &lt; 0.001).</p>
       <ul class="tags"><li>Infrastructure</li><li>Spatial analysis</li><li>Energy</li></ul>
     </article>
 
+  </section>
+
+  <!-- ===== WRITING ===== -->
+  <section id="writing">
+    <h2>Writing</h2>
+
+    <article class="card feature anim-card">
+      <div>
+        <h3><a href="assets/docs/Cambel_Hurst_Policy_Memo_Virginia_Housing.pdf">Addressing the Supply of Housing in Virginia</a></h3>
+        <p class="meta">Policy memo to the Virginia General Assembly | October 2025</p>
+        <p>Virginia's active home listings fell by about 54 percent between 2016 and 2025 while prices rose about 76 percent. This memo traces the shortage to local supply constraints, compares a state Builder's Remedy, a Pro-Housing Incentive Program, and the status quo on supply, affordability, and political feasibility, and recommends a Builder's Remedy with a phased implementation plan.</p>
+        <p><a href="assets/docs/Cambel_Hurst_Policy_Memo_Virginia_Housing.pdf">Read the memo (PDF)</a></p>
+        <ul class="tags"><li>Housing policy</li><li>Policy analysis</li><li>State and local government</li></ul>
+      </div>
+      <a href="assets/docs/Cambel_Hurst_Policy_Memo_Virginia_Housing.pdf"><img src="assets/img/memo-preview.jpg" alt="First page of the policy memo on Virginia's housing supply" loading="lazy"></a>
+    </article>
   </section>
 
   <!-- ===== RESUME =====
@@ -82,17 +112,6 @@
     </div>
   </section>
 
-  <!-- ===== SKILLS ===== -->
-  <section id="skills">
-    <h2>Skills</h2>
-    <div class="skills">
-      <div><h3>Analysis and data</h3><p>R, Stata, Excel, GTFS, American Community Survey and Census data</p></div>
-      <div><h3>GIS</h3><p>ArcGIS Pro, spatial joins and buffers, suitability analysis, map layout and design</p></div>
-      <div><h3>Policy and planning</h3><p>Transit service evaluation, accessibility analysis, policy memos, briefing materials</p></div>
-      <div><h3>Communication</h3><p>Staff reports, stakeholder communication, presentations for elected officials</p></div>
-    </div>
-  </section>
-
   <!-- ===== CONTACT ===== -->
   <section id="contact">
     <h2>Contact</h2>
@@ -108,9 +127,9 @@
 </footer>
 
 <script>
-  // Project cards slide into view as you scroll to them.
+  // Project and writing cards slide into view as you scroll to them.
   (function () {
-    var cards = document.querySelectorAll("#projects .card");
+    var cards = document.querySelectorAll(".anim-card");
     if (!("IntersectionObserver" in window)) { cards.forEach(function (c) { c.classList.add("in-view"); }); return; }
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (e) { if (e.isIntersecting) { var t = e.target; t.classList.add("in-view"); io.unobserve(t); setTimeout(function () { t.style.transitionDelay = ""; }, 1200); } });
