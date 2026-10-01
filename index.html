@@ -8,7 +8,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=3">
+  <link rel="stylesheet" href="assets/style.css?v=4">
+  <script>document.documentElement.classList.add("js");</script>
 </head>
 <body>
 
@@ -17,10 +18,8 @@
     <a class="brand" href="index.html">Cambel Hurst</a>
     <nav class="nav">
       <a href="#projects">Projects</a>
-      <a href="#experience">Experience</a>
-      <a href="#education">Education</a>
-      <a href="#skills">Skills</a>
       <a href="#resume">Résumé</a>
+      <a href="#skills">Skills</a>
       <a href="#contact">Contact</a>
     </nav>
   </div>
@@ -65,74 +64,6 @@
 
   </section>
 
-  <!-- ===== EXPERIENCE ===== -->
-  <section id="experience">
-    <h2>Experience</h2>
-
-    <div class="job">
-      <h3>Professional Development Fellow, Planning and Operations</h3>
-      <p class="meta">OmniRide (Potomac and Rappahannock Transportation Commission) | July 2026 to present</p>
-      <ul>
-        <li>Check automatic passenger counter ridership data for quality ahead of National Transit Database reporting.</li>
-        <li>Support service change evaluation and ridership modeling in R.</li>
-        <li>Assist with grant development and audit real-time vehicle location feeds.</li>
-      </ul>
-    </div>
-
-    <div class="job">
-      <h3>Assistant Community Manager (promoted from Administrative Assistant)</h3>
-      <p class="meta">Lake Braddock Community Association | August 2025 to 2026 | Burke, VA</p>
-      <ul>
-        <li>Tracked housing and architectural compliance across 1,298 residential properties using internal databases and Excel.</li>
-        <li>Processed architectural review submissions and compliance cases for Board consideration under the association's governing documents.</li>
-        <li>Drafted formal notices and case summaries for residents and decision-makers; promoted within three months.</li>
-      </ul>
-    </div>
-
-    <div class="job">
-      <h3>Programs Intern</h3>
-      <p class="meta">City of Fairfax Office of Economic Development | August to December 2024</p>
-      <ul>
-        <li>Supported four local economic development programs and maintained CRM data for more than 200 businesses.</li>
-        <li>Prepared summary tables, charts, and briefing materials for city council and staff.</li>
-      </ul>
-    </div>
-
-    <div class="job">
-      <h3>Research Intern</h3>
-      <p class="meta">Portsmouth Commissioner of the Revenue | December 2022 to January 2023</p>
-      <ul>
-        <li>Researched emerging industries and contributed to a policy memo identifying more than $2 million in potential revenue.</li>
-      </ul>
-    </div>
-  </section>
-
-  <!-- ===== EDUCATION ===== -->
-  <section id="education">
-    <h2>Education</h2>
-    <div class="job">
-      <h3>Master of Public Policy</h3>
-      <p class="meta">Schar School of Policy and Government, George Mason University | Expected May 2027 | GPA: 3.7</p>
-      <p>Emphasis in Regional Growth, Infrastructure, and Transportation.</p>
-    </div>
-    <div class="job">
-      <h3>Bachelor of Science, Economics</h3>
-      <p class="meta">George Mason University | May 2025 | GPA: 3.5</p>
-      <p>Philosophy, Politics, and Economics concentration; minor in Global Systems.</p>
-    </div>
-  </section>
-
-  <!-- ===== SKILLS ===== -->
-  <section id="skills">
-    <h2>Skills</h2>
-    <div class="skills">
-      <div><h3>Analysis and data</h3><p>R, Stata, Excel, GTFS, American Community Survey and Census data</p></div>
-      <div><h3>GIS</h3><p>ArcGIS Pro, spatial joins and buffers, suitability analysis, map layout and design</p></div>
-      <div><h3>Policy and planning</h3><p>Transit service evaluation, accessibility analysis, policy memos, briefing materials</p></div>
-      <div><h3>Communication</h3><p>Staff reports, stakeholder communication, presentations for elected officials</p></div>
-    </div>
-  </section>
-
   <!-- ===== RESUME =====
        To update: replace assets/docs/Cambel_Hurst_Resume.pdf (keep the same file name)
        and assets/img/resume-preview.jpg (the image shown on phones). -->
@@ -151,6 +82,17 @@
     </div>
   </section>
 
+  <!-- ===== SKILLS ===== -->
+  <section id="skills">
+    <h2>Skills</h2>
+    <div class="skills">
+      <div><h3>Analysis and data</h3><p>R, Stata, Excel, GTFS, American Community Survey and Census data</p></div>
+      <div><h3>GIS</h3><p>ArcGIS Pro, spatial joins and buffers, suitability analysis, map layout and design</p></div>
+      <div><h3>Policy and planning</h3><p>Transit service evaluation, accessibility analysis, policy memos, briefing materials</p></div>
+      <div><h3>Communication</h3><p>Staff reports, stakeholder communication, presentations for elected officials</p></div>
+    </div>
+  </section>
+
   <!-- ===== CONTACT ===== -->
   <section id="contact">
     <h2>Contact</h2>
@@ -164,6 +106,18 @@
 <footer>
   <div class="wrap">Cambel Hurst | Northern Virginia</div>
 </footer>
+
+<script>
+  // Project cards slide into view as you scroll to them.
+  (function () {
+    var cards = document.querySelectorAll("#projects .card");
+    if (!("IntersectionObserver" in window)) { cards.forEach(function (c) { c.classList.add("in-view"); }); return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) { if (e.isIntersecting) { var t = e.target; t.classList.add("in-view"); io.unobserve(t); setTimeout(function () { t.style.transitionDelay = ""; }, 1200); } });
+    }, { threshold: 0.15 });
+    cards.forEach(function (c, i) { c.style.transitionDelay = (i * 120) + "ms"; io.observe(c); });
+  })();
+</script>
 
 </body>
 </html>
