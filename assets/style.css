@@ -105,3 +105,13 @@ tr.total td { font-weight: 700; }
 .note { background: var(--accent-soft); border-radius: 10px; padding: 16px 18px; font-size: 0.95rem; }
 
 footer { background: rgba(255, 255, 255, 0.9); border-top: 1px solid var(--line); padding: 28px 0 40px; color: var(--muted); font-size: 0.9rem; }
+
+/* Embedded résumé. Desktop shows the PDF viewer; phones show a preview image that opens the PDF. */
+.resume-embed { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: #f4f4f4; }
+.resume-embed object { display: block; width: 100%; height: 1100px; max-height: 85vh; border: 0; }
+.resume-image { display: none; }
+.resume-image img, .resume-embed img { border: 1px solid var(--line); border-radius: 10px; }
+@media (max-width: 759px) {
+  .resume-embed { display: none; }
+  .resume-image { display: block; }
+}
