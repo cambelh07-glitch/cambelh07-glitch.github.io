@@ -107,6 +107,7 @@
     /* Map */
     .map-wrap { position: relative; }
     #map { height: 480px; border: 1px solid var(--line); border-radius: 10px; background: #f4f4f2; z-index: 0; }
+    #map .leaflet-tile-pane { filter: grayscale(1) brightness(1.08) contrast(0.85); }
     @media (max-width: 600px) { #map { height: 380px; } }
     .map-hint { position: absolute; bottom: 10px; left: 10px; z-index: 500; background: rgba(255,255,255,0.92); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font-size: 0.78rem; color: var(--muted); pointer-events: none; }
     .leaflet-popup-content { font-family: var(--sans); font-size: 0.86rem; line-height: 1.5; margin: 12px 14px; }
@@ -355,7 +356,7 @@
 
   <section>
     <h2>Tools and disclosure</h2>
-    <p>JavaScript, Leaflet, and Fairfax County's public ArcGIS map services (PLUS zoning applications and supervisor districts). Basemap from OpenStreetMap and CARTO.</p>
+    <p>JavaScript, Leaflet, and Fairfax County's public ArcGIS map services (PLUS zoning applications and supervisor districts). Basemap from OpenStreetMap.</p>
     <!-- PLACEHOLDER: AI-USE STATEMENT AND NON-AFFILIATION NOTE. Replace with <p class="note"> and <p class="meta"> as on your transit page. -->
     <div class="placeholder">
       <span class="ph-label">To write: AI-use statement and non-affiliation note</span>
@@ -716,9 +717,10 @@
   // ---------- Map ----------
   function setupMap(districtGeo) {
     map = L.map("map", { preferCanvas: true, scrollWheelZoom: false, minZoom: 9 }).setView([38.835, -77.28], 10);
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      subdomains: "abcd", maxZoom: 19
+    // OpenStreetMap tiles need no API key. The CSS on .leaflet-tile-pane turns them light gray so the case dots stand out.
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
     }).addTo(map);
     // Scroll-wheel zoom turns on only after the visitor clicks the map, so the page scrolls normally.
     map.on("click", function () { map.scrollWheelZoom.enable(); });
