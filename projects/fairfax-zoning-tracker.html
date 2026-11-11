@@ -1,0 +1,1128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fairfax County Zoning Case Tracker | Cambel Hurst</title>
+  <meta name="description" content="An interactive tracker of Fairfax County rezoning and other zoning applications since 2000: outcomes, time to decision, and location, loaded live from county data.">
+  <link rel="icon" href="../favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="../assets/img/icon-32.png">
+  <link rel="apple-touch-icon" href="../assets/img/icon-180.png">
+  <meta name="theme-color" content="#1f4e79">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:wght@600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/style.css?v=5">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <script>
+    // Draft view shows the yellow "To write" boxes and the unfinished sections. It turns on when the page
+    // is opened from your own computer, or online when "?draft" is added to the end of the page address.
+    // On the live site without "?draft", those boxes and sections stay hidden.
+    (function () {
+      var h = location.hostname;
+      if (location.protocol === "file:" || h === "localhost" || h === "127.0.0.1" || /[?&]draft\b/.test(location.search)) {
+        document.documentElement.classList.add("draft");
+      }
+    })();
+  </script>
+  <style>
+    /* Styles used only on this page. Site-wide styles live in assets/style.css. */
+    .zt {
+      --o-approved: #2a78d6;
+      --o-denied: #eb6834;
+      --o-withdrawn: #a3a19a;
+      --o-pending: #1baf7a;
+      --grid: #e1e0d9;
+      --axis: #c3c2b7;
+      --axis-text: #898781;
+    }
+
+    /* Current tab in the navigation */
+    .nav a[aria-current="page"] { color: var(--accent); font-weight: 600; }
+
+    /* Draft view (see the script above). Hidden on the live site, shown in draft view. */
+    .placeholder, .draft-only { display: none; }
+    html.draft .placeholder, html.draft .draft-only { display: block; }
+    .draft-banner { background: #fff8e1; border: 1px solid #e8c766; border-radius: 8px; padding: 8px 12px; margin: 16px 0 0; font-size: 0.85rem; color: #6b4e00; }
+
+    /* About the data */
+    .data-panel { background: var(--accent-soft); border-radius: 10px; padding: 16px 20px 6px; margin-top: 22px; font-size: 0.9rem; line-height: 1.55; }
+    .data-panel h2 { font-family: var(--serif); font-size: 1.15rem; margin: 0 0 10px; }
+    .data-panel .dp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 4px 24px; }
+    .data-panel h3 { font-size: 0.92rem; margin: 0 0 4px; color: var(--accent); }
+    .data-panel p { margin: 0 0 10px; }
+    .data-panel dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 0 0 8px; }
+    .data-panel dt { color: var(--muted); }
+    .data-panel dd { margin: 0; font-weight: 600; }
+    .data-panel .dp-note { color: var(--muted); font-size: 0.84rem; }
+
+    /* Text placeholders. Replace each .placeholder block with your own text, then delete it. */
+    .placeholder { border: 2px dashed #d9a400; background: #fff8e1; border-radius: 10px; padding: 14px 18px; margin: 14px 0; font-size: 0.95rem; }
+    .placeholder .ph-label { display: block; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.75rem; font-weight: 600; color: #8a6400; margin-bottom: 4px; }
+    .placeholder ul { margin: 6px 0 0; padding-left: 20px; }
+
+    /* Proposed-use tabs */
+    .use-label { font-size: 0.8rem; color: var(--muted); font-weight: 600; margin: 0 0 6px; }
+    .use-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 6px; }
+    .use-tab { font: inherit; font-size: 0.88rem; padding: 6px 12px; border-radius: 999px; border: 1px solid #cfcbc0; background: #fff; color: var(--text); cursor: pointer; }
+    .use-tab .n { color: var(--muted); margin-left: 4px; font-variant-numeric: tabular-nums; }
+    .use-tab:hover { border-color: var(--accent); }
+    .use-tab[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .use-tab[aria-pressed="true"] .n { color: rgba(255, 255, 255, 0.8); }
+    .use-note { font-size: 0.82rem; color: var(--muted); margin: 0 0 16px; }
+    .cases-table td.case .sub-use { display: block; font-size: 0.78rem; color: var(--accent); }
+
+    /* Filters */
+    .filters { display: flex; flex-wrap: wrap; gap: 12px 14px; align-items: flex-end; margin: 4px 0 14px; }
+    .filters label { display: flex; flex-direction: column; gap: 4px; font-size: 0.8rem; color: var(--muted); font-weight: 600; }
+    .filters select, .filters input[type="search"] {
+      font: inherit; font-size: 0.92rem; color: var(--text); background: #fff;
+      border: 1px solid #cfcbc0; border-radius: 6px; padding: 7px 10px; min-height: 38px;
+    }
+    .filters input[type="search"] { min-width: 220px; }
+    .filters .years { display: flex; gap: 6px; align-items: center; }
+    .filters .years span { font-weight: 400; }
+    .btn-small { font: inherit; font-size: 0.9rem; padding: 7px 14px; border-radius: 6px; border: 1px solid var(--accent); color: var(--accent); background: #fff; cursor: pointer; min-height: 38px; }
+    .btn-small:hover { background: var(--accent-soft); }
+    .btn-small:disabled { opacity: 0.45; cursor: default; background: #fff; }
+    .status-line { color: var(--muted); font-size: 0.9rem; margin: 0 0 16px; }
+    .status-line.error { color: #b3261e; }
+
+    /* Stat tiles */
+    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 10px; margin-bottom: 8px; }
+    .tile { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+    .tile-label { margin: 0; font-size: 0.8rem; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+    .tile-value { margin: 2px 0 0; font-size: 1.55rem; font-weight: 600; line-height: 1.2; }
+    .tile-sub { margin: 2px 0 0; font-size: 0.8rem; color: var(--muted); }
+    .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+    .dot.approved { background: var(--o-approved); }
+    .dot.denied { background: var(--o-denied); }
+    .dot.withdrawn { background: var(--o-withdrawn); }
+    .dot.pending { background: var(--o-pending); }
+
+    /* Legend */
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 0 0 8px; padding: 0; list-style: none; font-size: 0.85rem; color: var(--muted); }
+    .legend li { display: flex; align-items: center; gap: 6px; }
+
+    /* Map */
+    .map-wrap { position: relative; }
+    #map { height: 480px; border: 1px solid var(--line); border-radius: 10px; background: #f4f4f2; z-index: 0; }
+    @media (max-width: 600px) { #map { height: 380px; } }
+    .map-hint { position: absolute; bottom: 10px; left: 10px; z-index: 500; background: rgba(255,255,255,0.92); border: 1px solid var(--line); border-radius: 6px; padding: 3px 8px; font-size: 0.78rem; color: var(--muted); pointer-events: none; }
+    .leaflet-popup-content { font-family: var(--sans); font-size: 0.86rem; line-height: 1.5; margin: 12px 14px; }
+    .popup h4 { margin: 0 0 2px; font-size: 0.95rem; }
+    .popup p { margin: 4px 0; }
+    .popup .muted { color: var(--muted); }
+    .popup dl { display: grid; grid-template-columns: auto 1fr; gap: 1px 10px; margin: 6px 0; }
+    .popup dt { color: var(--muted); }
+    .popup dd { margin: 0; }
+
+    /* Chart */
+    .chart-box { position: relative; }
+    #chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+    #chart .yr:focus { outline: none; }
+    #chart .yr:focus .hit { fill: rgba(31, 78, 121, 0.08); }
+    #chart .hit { fill: transparent; }
+    #chart .yr:hover .hit, #chart .yr.active .hit { fill: rgba(31, 78, 121, 0.06); }
+    .tooltip { position: absolute; pointer-events: none; z-index: 10; background: #fff; border: 1px solid rgba(11,11,11,0.12); border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.10); padding: 8px 10px; font-size: 0.82rem; line-height: 1.45; min-width: 170px; display: none; }
+    .tooltip .tt-title { font-weight: 600; margin-bottom: 2px; }
+    .tooltip .tt-row { display: flex; align-items: center; gap: 6px; }
+    .tooltip .tt-row span.n { margin-left: auto; font-variant-numeric: tabular-nums; padding-left: 12px; }
+    details.data-table { margin-top: 12px; font-size: 0.92rem; }
+    details.data-table summary { cursor: pointer; color: var(--accent); }
+
+    /* Tables on this page */
+    .zt table td, .zt table th { font-variant-numeric: tabular-nums; }
+    .zt thead th { white-space: normal; vertical-align: bottom; line-height: 1.3; }
+    .cases-table { font-size: 0.86rem; }
+    .cases-table th, .cases-table td { padding: 8px 7px; vertical-align: top; }
+    .cases-table td.case .sub-type { display: block; color: var(--muted); font-size: 0.8rem; white-space: normal; max-width: 170px; }
+    .cases-table th button { all: unset; cursor: pointer; color: var(--muted); font-weight: 600; white-space: nowrap; }
+    .cases-table th button:hover, .cases-table th button:focus-visible { color: var(--accent); text-decoration: underline; }
+    .cases-table th[aria-sort="ascending"] button::after { content: " \2191"; }
+    .cases-table th[aria-sort="descending"] button::after { content: " \2193"; }
+    .cases-table td.text, .cases-table th.text { text-align: left; }
+    .cases-table td.desc { text-align: left; white-space: normal; min-width: 200px; }
+    .cases-table td.desc .d { display: block; color: var(--muted); font-size: 0.8rem; line-height: 1.4; margin-top: 2px; }
+    .cases-table td.outcome { text-align: left; white-space: normal; max-width: 125px; }
+    .cases-table td.outcome .o { display: flex; align-items: flex-start; gap: 6px; }
+    .cases-table td.outcome .o .dot { margin-top: 5px; }
+    .cases-table td.outcome .raw { display: block; color: var(--muted); font-size: 0.78rem; padding-left: 16px; }
+    .cases-table td.dist { text-align: left; white-space: normal; }
+    .cases-table .map-btn { font: inherit; font-size: 0.76rem; padding: 1px 7px; margin-top: 4px; border-radius: 5px; border: 1px solid #cfcbc0; background: #fff; color: var(--accent); cursor: pointer; }
+    .cases-table .map-btn:hover { background: var(--accent-soft); }
+    .cases-table .map-btn:disabled { color: var(--muted); cursor: default; background: #fff; }
+    .pager { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; font-size: 0.9rem; color: var(--muted); }
+    .pager .spacer { flex: 1; }
+    .empty { color: var(--muted); padding: 16px 0; }
+    h3.sub { font-size: 1.05rem; margin: 30px 0 10px; }
+  </style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="../index.html">Cambel Hurst</a>
+    <nav class="nav">
+      <a href="../index.html#projects">Projects</a>
+      <a href="fairfax-zoning-tracker.html" aria-current="page">Zoning Tracker</a>
+      <a href="../index.html#resume">Résumé</a>
+      <a href="../index.html#contact">Contact</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap zt">
+
+  <p class="draft-banner draft-only">Draft view. The yellow boxes and the Key findings and Methods sections are hidden on the live site until you write them. To see this view online, add <code>?draft</code> to the end of the page address.</p>
+
+  <div class="project-header">
+    <p class="meta">Independent project | November 2026</p>
+    <!-- The title is a working title. Change it if you prefer another. -->
+    <h1>Fairfax County Zoning Case Tracker</h1>
+
+    <!-- PLACEHOLDER: INTRODUCTION. Replace this whole div with one <p> of your own text. -->
+    <div class="placeholder">
+      <span class="ph-label">To write: introduction (2 to 3 sentences)</span>
+      Open with the question the tracker answers, the way your transit page opens with its question. Then give the scope in plain terms: whose decisions these are, what kinds of applications, and the time span (cases submitted since 2000, loaded live from county data).
+    </div>
+
+    <!-- ABOUT THE DATA. The three dates in "Last update" fill in automatically each time the page loads. -->
+    <div class="data-panel" role="region" aria-labelledby="about-data">
+      <h2 id="about-data">About the data</h2>
+      <div class="dp-grid">
+        <div>
+          <h3>Source</h3>
+          <p>Fairfax County Department of Planning and Development, through the county's public <a href="https://www.arcgis.com/home/item.html?id=c4231362dd3d4a639e5eae1ddbdf81cd" target="_blank" rel="noopener">PLUS Zoning Applications</a> dataset, which covers zoning applications submitted since 2000. District boundaries come from the county's <a href="https://www.arcgis.com/home/item.html?id=5222d723815e469a998807b531073320" target="_blank" rel="noopener">Supervisor Districts</a> dataset.</p>
+        </div>
+        <div>
+          <h3>How it is pulled</h3>
+          <p>Each time this page opens, your browser requests every case directly from the county's public <a href="https://services1.arcgis.com/ioennV6PpG5Xodq0/ArcGIS/rest/services/PLUS_Zoning_Applications/FeatureServer/0" target="_blank" rel="noopener">ArcGIS REST service</a>, in batches of up to 2,000 records. Nothing is copied or stored on this site, so the page shows the county's data as it stands when you load it.</p>
+        </div>
+        <div>
+          <h3>Last update</h3>
+          <dl>
+            <dt>County data updated</dt><dd id="d-county">Checking...</dd>
+            <dt>Loaded on this page</dt><dd id="d-loaded">Loading...</dd>
+            <dt>Newest case submitted</dt><dd id="d-latest">Loading...</dd>
+          </dl>
+          <p class="dp-note">The county refreshes this dataset daily. Times are Eastern.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY FINDINGS. This section is hidden on the live site (class "draft-only") until you write it.
+       When your findings are ready, delete the placeholder div and remove class="draft-only" from this section. -->
+  <section class="draft-only">
+    <h2>Key findings</h2>
+    <!-- PLACEHOLDER: KEY FINDINGS. Replace with <ul class="findings"> and 3 to 5 <li> items, each starting with a bolded lead like your transit page. -->
+    <div class="placeholder">
+      <span class="ph-label">To write: 3 to 5 findings, after exploring the tracker</span>
+      Use the filters below to find patterns, then report exact numbers and the date you pulled them (the data changes daily). Questions worth checking:
+      <ul>
+        <li>What share of decided rezonings were approved, and has it changed over time?</li>
+        <li>How often do cases end in withdrawal rather than a formal denial?</li>
+        <li>How long does a decision take, and did it change after the county moved applications into PLUS in July 2021?</li>
+        <li>Do outcomes or timelines differ across supervisor districts?</li>
+        <li>Do housing rezonings fare differently from commercial or industrial ones, in approval, withdrawal, or time to decision?</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="explore">
+    <h2>Explore the cases</h2>
+
+    <p class="use-label" id="use-label">Proposed use</p>
+    <div class="use-tabs" id="use-tabs" role="group" aria-labelledby="use-label"></div>
+    <p class="use-note">Each case is sorted by the use it proposes, based on its written description and the zoning district it requests. The sorting is approximate, so open a case to confirm. <a href="#use-rules">How cases are sorted</a></p>
+
+    <form class="filters" id="filters" onsubmit="return false;">
+      <label>Application type
+        <select id="f-type"></select>
+      </label>
+      <label>Outcome
+        <select id="f-outcome">
+          <option value="all">All outcomes</option>
+          <option value="approved">Approved</option>
+          <option value="denied">Denied</option>
+          <option value="withdrawn">Withdrawn or inactive</option>
+          <option value="pending">Pending or in review</option>
+        </select>
+      </label>
+      <label>Supervisor district
+        <select id="f-district"><option value="all">All districts</option></select>
+      </label>
+      <label>Year submitted
+        <span class="years"><select id="f-from" aria-label="From year"></select><span>to</span><select id="f-to" aria-label="To year"></select></span>
+      </label>
+      <label>Search
+        <input type="search" id="f-search" placeholder="Case number, applicant, or description" autocomplete="off">
+      </label>
+      <button type="button" class="btn-small" id="f-reset">Reset</button>
+    </form>
+
+    <p class="status-line" id="status" aria-live="polite">Loading cases from Fairfax County...</p>
+
+    <div class="tiles" id="tiles">
+      <div class="tile"><p class="tile-label">Cases</p><p class="tile-value" id="t-cases">...</p><p class="tile-sub" id="t-cases-sub">&nbsp;</p></div>
+      <div class="tile"><p class="tile-label"><span class="dot approved"></span>Approved</p><p class="tile-value" id="t-approved">...</p><p class="tile-sub" id="t-approved-sub">&nbsp;</p></div>
+      <div class="tile"><p class="tile-label"><span class="dot denied"></span>Denied</p><p class="tile-value" id="t-denied">...</p><p class="tile-sub" id="t-denied-sub">&nbsp;</p></div>
+      <div class="tile"><p class="tile-label"><span class="dot withdrawn"></span>Withdrawn or inactive</p><p class="tile-value" id="t-withdrawn">...</p><p class="tile-sub" id="t-withdrawn-sub">&nbsp;</p></div>
+      <div class="tile"><p class="tile-label"><span class="dot pending"></span>Pending or in review</p><p class="tile-value" id="t-pending">...</p><p class="tile-sub" id="t-pending-sub">&nbsp;</p></div>
+      <div class="tile"><p class="tile-label">Median time to decision</p><p class="tile-value" id="t-days">...</p><p class="tile-sub" id="t-days-sub">&nbsp;</p></div>
+    </div>
+    <p class="meta">Approval rate is approved cases divided by decided cases (approved plus denied). Time to decision runs from submission to the approval or denial date.</p>
+
+    <h3 class="sub">Map</h3>
+    <ul class="legend" aria-label="Outcome legend">
+      <li><span class="dot approved"></span>Approved</li>
+      <li><span class="dot denied"></span>Denied</li>
+      <li><span class="dot withdrawn"></span>Withdrawn or inactive</li>
+      <li><span class="dot pending"></span>Pending or in review</li>
+    </ul>
+    <div class="map-wrap">
+      <div id="map" role="region" aria-label="Map of zoning cases. Each case is also listed in the table below."></div>
+      <div class="map-hint">Click a dot for case details</div>
+    </div>
+    <p class="meta" style="margin-top:8px">Each dot is the center of a case's application area. Clicking a dot outlines the area and links to the county's case record. Gray lines are current supervisor district boundaries.</p>
+
+    <h3 class="sub">Cases by year submitted</h3>
+    <ul class="legend" aria-label="Outcome legend">
+      <li><span class="dot approved"></span>Approved</li>
+      <li><span class="dot denied"></span>Denied</li>
+      <li><span class="dot withdrawn"></span>Withdrawn or inactive</li>
+      <li><span class="dot pending"></span>Pending or in review</li>
+    </ul>
+    <div class="chart-box">
+      <div id="chart"></div>
+      <div class="tooltip" id="chart-tip" role="status"></div>
+    </div>
+    <details class="data-table">
+      <summary>Show chart data as a table</summary>
+      <div class="table-wrap" id="year-table"></div>
+    </details>
+
+    <h3 class="sub">Outcomes by supervisor district</h3>
+    <div class="table-wrap" id="district-table"></div>
+    <p class="meta" style="margin-top:8px">This table applies every filter except the district filter, so districts can be compared. Districts are assigned from each case's center point using current boundaries, so older cases appear under today's district names.</p>
+
+    <h3 class="sub">Case list</h3>
+    <div class="table-wrap" id="case-table"></div>
+    <div class="pager" id="pager"></div>
+
+    <details class="data-table">
+      <summary>How the county's statuses are grouped into outcomes</summary>
+      <div class="table-wrap" id="crosswalk"></div>
+    </details>
+
+    <details class="data-table" id="use-rules">
+      <summary>How cases are sorted by proposed use</summary>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Proposed use</th><th style="text-align:left">A case goes here when its description mentions</th></tr></thead>
+          <tbody>
+            <tr><td>Mixed-use</td><td style="text-align:left;white-space:normal">"Mixed use," the Tysons (PTC) district, or both housing and commercial terms. Checked first.</td></tr>
+            <tr><td>Housing</td><td style="text-align:left;white-space:normal">Residential terms such as residential, dwellings, units, single family, townhouses, multifamily, apartments, senior or assisted living, or lots. Also cases that request a planned residential district (PDH, PRM, PRC, or PCC) and name no commercial or industrial use, or a conventional residential district (R) and name no other use.</td></tr>
+            <tr><td>Industrial and data centers</td><td style="text-align:left;white-space:normal">Industrial, warehouse, flex, logistics, contractor, storage, manufacturing, or data center terms, or a request for an I district.</td></tr>
+            <tr><td>Commercial and office</td><td style="text-align:left;white-space:normal">Commercial, retail, office, restaurant, hotel, drive-through, service station, car wash, or vehicle sales and service terms, or a request for a C or PDC district.</td></tr>
+            <tr><td>Institutional and public</td><td style="text-align:left;white-space:normal">Places of worship, schools, child care, medical care, hospitals, parks, public uses, and similar terms, when no other use applies.</td></tr>
+            <tr><td>Other or unclear</td><td style="text-align:left;white-space:normal">Descriptions with none of the above, such as county-created overlay districts or plan amendments that do not state a use.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+
+  <!-- METHODS. Hidden on the live site (class "draft-only") until you write it.
+       When it is ready, delete the placeholder div and remove class="draft-only" from this section. -->
+  <section class="draft-only">
+    <h2>Methods</h2>
+    <!-- PLACEHOLDER: METHODS. Replace with <p><strong>Label.</strong> text</p> paragraphs, matching your transit page. -->
+    <div class="placeholder">
+      <span class="ph-label">To write: methods, in the Measures / Limitations pattern of your transit page</span>
+      The "About the data" box at the top already covers the source and how the data is pulled, so focus here on definitions and limitations. Points to cover:
+      <ul>
+        <li><strong>Unit of analysis.</strong> What one record is (one application, including amendments filed as their own records).</li>
+        <li><strong>Outcomes.</strong> How the county's 20-plus statuses are grouped into four outcomes (the table above shows the grouping), and how the approval rate is defined.</li>
+        <li><strong>Time to decision.</strong> Days from submission to the status date of approved or denied cases. Impossible dates are excluded.</li>
+        <li><strong>Districts.</strong> Assigned from each case's center point using current supervisor district boundaries.</li>
+        <li><strong>Proposed use.</strong> Sorted from each case's written description and requested zoning district (the table above lists the rules). Say that it is approximate, and that plan amendments often do not state a use.</li>
+        <li><strong>Limitations.</strong> The status date can reflect a later administrative update rather than the hearing date; the data has no unit counts; plan amendments (PCA, FDP, and similar) are tied to earlier rezonings; records begin in 2000. Also confirm whether cases in the towns of Herndon, Vienna, and Clifton appear, since the towns run their own zoning.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tools and disclosure</h2>
+    <p>JavaScript, Leaflet, and Fairfax County's public ArcGIS map services (PLUS zoning applications and supervisor districts). Basemap from OpenStreetMap and CARTO.</p>
+    <!-- PLACEHOLDER: AI-USE STATEMENT AND NON-AFFILIATION NOTE. Replace with <p class="note"> and <p class="meta"> as on your transit page. -->
+    <div class="placeholder">
+      <span class="ph-label">To write: AI-use statement and non-affiliation note</span>
+      Follow your transit page: say what you designed and decided, what Claude built at your direction (this page's code), and how you checked it. Then add a one-line note that this is an independent project that uses public data and does not represent Fairfax County.
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap"><a href="../index.html">Back to home</a></div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+/*
+  Fairfax County Zoning Case Tracker
+  Loads every zoning application in Fairfax County's PLUS zoning applications layer when the page opens,
+  then filters, maps, charts, and tabulates it in the browser. Nothing is stored on the site, so the page
+  always shows the county's current data.
+
+  Data sources (public ArcGIS REST services published by Fairfax County):
+    Cases:      https://services1.arcgis.com/ioennV6PpG5Xodq0/ArcGIS/rest/services/PLUS_Zoning_Applications/FeatureServer/0
+    Districts:  https://services1.arcgis.com/ioennV6PpG5Xodq0/ArcGIS/rest/services/Supervisor_Districts/FeatureServer/0
+*/
+(function () {
+  "use strict";
+
+  var CASES_URL = "https://services1.arcgis.com/ioennV6PpG5Xodq0/ArcGIS/rest/services/PLUS_Zoning_Applications/FeatureServer/0";
+  var DISTRICTS_URL = "https://services1.arcgis.com/ioennV6PpG5Xodq0/ArcGIS/rest/services/Supervisor_Districts/FeatureServer/0";
+  var FIELDS = "OBJECTID,RECORDID,APPTYPEALIAS,RECORD_STATUS,RECORD_STATUS_DATE,SUBMITTED_DATE,APPLICANT,WORK_DESCRIPTION,LINK_URL,Shape__Area";
+  var PAGE_SIZE = 2000;          // the service returns at most 2,000 records per request
+  var ROWS_PER_PAGE = 25;
+  var DAY = 864e5;
+  var DEFAULT_TYPE = "Rezoning";
+
+  // Short labels for the county's application types, in the order they appear in the filter.
+  var TYPE_LABELS = {
+    "Rezoning": "Rezoning",
+    "Rezoning Plan Applications and Amendments": "Rezoning plans and amendments",
+    "Special Exception and Special Exception Amendment": "Special exceptions",
+    "Special Permit and Special Permit Amendment": "Special permits",
+    "Variance and Variance Amendment": "Variances",
+    "Agricultural and Forestal District": "Agricultural and forestal districts",
+    "Agricultural and Forestal Districts Renewal": "Agricultural and forestal districts",
+    "Agricultural and Forestal Districts Amendment": "Agricultural and forestal districts"
+  };
+  var TYPE_ORDER = ["Rezoning", "Rezoning plans and amendments", "Special exceptions", "Special permits", "Variances", "Agricultural and forestal districts"];
+
+  // Outcome groups. Order here sets stacking order (bottom to top) and legend order.
+  var GROUPS = [
+    { key: "approved", label: "Approved", color: "#2a78d6" },
+    { key: "denied", label: "Denied", color: "#eb6834" },
+    { key: "withdrawn", label: "Withdrawn or inactive", color: "#a3a19a" },
+    { key: "pending", label: "Pending or in review", color: "#1baf7a" }
+  ];
+  var GROUP_BY_KEY = {};
+  GROUPS.forEach(function (g) { GROUP_BY_KEY[g.key] = g; });
+
+  // County status -> outcome group. Any status not listed here counts as pending.
+  var STATUS_GROUP = {
+    "Approved": "approved",
+    "Board Approved": "approved",
+    "Denied": "denied",
+    "Withdrawn": "withdrawn",
+    "Dismissed": "withdrawn",
+    "Initiate Dismissal": "withdrawn",
+    "Terminated": "withdrawn",
+    "Expired": "withdrawn",
+    "Expired - Abandoned": "withdrawn",
+    "Deferred Indefinitely": "withdrawn"
+  };
+
+  // Proposed-use categories (the tabs above the filters).
+  var USES = [
+    { key: "housing", label: "Housing" },
+    { key: "mixed", label: "Mixed-use" },
+    { key: "commercial", label: "Commercial and office" },
+    { key: "industrial", label: "Industrial and data centers" },
+    { key: "institutional", label: "Institutional and public" },
+    { key: "other", label: "Other or unclear" }
+  ];
+  var USE_BY_KEY = {};
+  USES.forEach(function (u) { USE_BY_KEY[u.key] = u; });
+
+  // Sorts a case into a proposed-use category from its description and the district it requests.
+  // The table "How cases are sorted by proposed use" on the page explains these rules in plain words.
+  function classifyUse(desc) {
+    var t = " " + String(desc || "").toUpperCase().replace(/\s+/g, " ") + " ";
+    var has = function (re) { return re.test(t); };
+    var housing = has(/RESIDENTIAL|DWELLING|\bUNITS?\b|SINGLE[- ]FAMILY|TOWN ?HO(ME|USE)|MULTI[- ]?FAMILY|APARTMENT|CONDO|SENIOR|INDEPENDENT LIVING|ASSISTED LIVING|CONTINUING CARE|AFFORDABLE|HOUSING|DUPLEX|BI-?PLEX|\bLOTS\b|SUBDIVI/);
+    var commercial = has(/COMMERCIAL|COMMERICAL|RETAIL|OFFICE|RESTAURANT|HOTEL|DRIVE[- ]?THR|SERVICE STATION|GAS STATION|CAR WASH|SHOPPING|\bSTORE\b|\bBANK\b|VEHICLE (SALE|STORAGE|.{0,20}SERVICE)|AUTOMOBILE/);
+    var industrial = has(/DATA ?CENTER|INDUSTRIAL|WAREHOUSE|\bFLEX\b|LOGISTIC|DISTRIBUTION|CONTRACTOR|SELF[- ]STORAGE|STORAGE YARD|MANUFACTUR|SUBSTATION/);
+    var inst = has(/SCHOOL|CHURCH|WORSHIP|CHILD CARE|DAY ?CARE|NURSING|HOSPITAL|MEDICAL CARE|PUBLIC (FACILIT|USE|PARK|BENEFIT)|\bPARKS?\b|LIBRARY|FIRE STATION|COLLEGE|UNIVERSITY|CEMETERY|RELIGIOUS|COMMUNITY CENT|GOLF/);
+    var instParen = has(/\((PLACE OF WORSHIP|CHURCH|SCHOOL|CHILD CARE|NURSING|PUBLIC|PARK)/);
+    var mixedWord = has(/MIXED[- ]?USE/);
+    var m = t.match(/\bTO ?(?:THE ?|A |AN )?(R-?\d+[A-Z]?|R-MHP|PDH-?\d+|PRM|PRC|PCC|PDC|PTC|C-?\d+|I-?\d+)\b/);
+    var tgt = m ? m[1] : "";
+    var tPlanned = /^(PDH|PRM|PRC|PCC)/.test(tgt);   // planned residential districts
+    var tR = /^R/.test(tgt);                         // conventional residential districts, which also allow churches and schools
+    var tComm = /^(C|PDC)/.test(tgt);
+    var tInd = /^I/.test(tgt) || (!tgt && has(/\bI-[1-6] (ZONING )?DISTRICT/));
+    if (mixedWord || tgt === "PTC" || (housing && commercial)) return "mixed";
+    if (instParen) return "institutional";
+    if (housing || (tPlanned && !commercial && !industrial) || (tR && !commercial && !industrial && !inst)) return "housing";
+    if (industrial || tInd) return "industrial";
+    if (commercial || tComm) return "commercial";
+    if (inst) return "institutional";
+    return "other";
+  }
+
+  var state = {
+    use: "all",
+    all: [], filtered: [], districts: null, districtNames: [],
+    minYear: 2000, maxYear: new Date().getFullYear(),
+    sort: { key: "submitted", dir: -1 }, page: 1, loadedAt: null
+  };
+  var map, caseLayer, outlineLayer = null, outlineToken = 0, markersById = {};
+
+  function $(id) { return document.getElementById(id); }
+
+  // ---------- Helpers ----------
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function fmtDate(ms) {
+    if (ms == null) return "";
+    return new Date(ms).toLocaleDateString("en-US", { timeZone: "UTC", year: "numeric", month: "short", day: "numeric" });
+  }
+  function isoDate(ms) { return ms == null ? "" : new Date(ms).toISOString().slice(0, 10); }
+  function fmtInt(n) { return n == null ? "" : Math.round(n).toLocaleString("en-US"); }
+  function fmtPct(n, d) { return d ? (100 * n / d).toFixed(1) + "%" : "n/a"; }
+  function median(arr) {
+    if (!arr.length) return null;
+    var s = arr.slice().sort(function (a, b) { return a - b; });
+    var m = Math.floor(s.length / 2);
+    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+  }
+  function titleCase(s) {
+    return String(s || "").toLowerCase().replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); });
+  }
+  function safeLink(url) { return /^https:\/\/plus\.fairfaxcounty\.gov\//i.test(url || "") ? url : ""; }
+  function truncate(s, n) { s = s || ""; return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "..." : s; }
+
+  function getJSON(url, params) {
+    return fetch(url + "?" + new URLSearchParams(params)).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    }).then(function (j) {
+      if (j && j.error) throw new Error(j.error.message || "Service error");
+      return j;
+    });
+  }
+
+  // ---------- Point in polygon (for assigning supervisor districts) ----------
+  function inRing(x, y, ring) {
+    var inside = false;
+    for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      var xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1];
+      if (((yi > y) !== (yj > y)) && (x < (xj - xi) * (y - yi) / (yj - yi) + xi)) inside = !inside;
+    }
+    return inside;
+  }
+  function inRings(x, y, rings) {
+    var inside = false;
+    for (var k = 0; k < rings.length; k++) if (inRing(x, y, rings[k])) inside = !inside;
+    return inside;
+  }
+  function prepDistricts(gj) {
+    return gj.features.map(function (f) {
+      var polys = f.geometry.type === "Polygon" ? [f.geometry.coordinates] : f.geometry.coordinates;
+      var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      polys.forEach(function (p) { p[0].forEach(function (c) {
+        if (c[0] < minX) minX = c[0]; if (c[0] > maxX) maxX = c[0];
+        if (c[1] < minY) minY = c[1]; if (c[1] > maxY) maxY = c[1];
+      }); });
+      return { name: titleCase(f.properties.DISTRICT), polys: polys, bbox: [minX, minY, maxX, maxY] };
+    });
+  }
+  function districtAt(x, y) {
+    var ds = state.districts || [];
+    for (var i = 0; i < ds.length; i++) {
+      var d = ds[i], b = d.bbox;
+      if (x < b[0] || x > b[2] || y < b[1] || y > b[3]) continue;
+      for (var k = 0; k < d.polys.length; k++) if (inRings(x, y, d.polys[k])) return d.name;
+    }
+    return "Unassigned";
+  }
+
+  // ---------- Loading ----------
+  function loadDistricts() {
+    return getJSON(DISTRICTS_URL + "/query", {
+      f: "geojson", where: "1=1", outFields: "DISTRICT", outSR: "4326",
+      maxAllowableOffset: "0.0003", geometryPrecision: "5"
+    });
+  }
+  function loadCases() {
+    return getJSON(CASES_URL + "/query", { f: "json", where: "1=1", returnCountOnly: "true" }).then(function (c) {
+      var offsets = [];
+      for (var o = 0; o < c.count; o += PAGE_SIZE) offsets.push(o);
+      return Promise.all(offsets.map(function (off) {
+        return getJSON(CASES_URL + "/query", {
+          f: "json", where: "1=1", outFields: FIELDS, returnGeometry: "false",
+          returnCentroid: "true", outSR: "4326", orderByFields: "OBJECTID",
+          resultOffset: String(off), resultRecordCount: String(PAGE_SIZE)
+        });
+      }));
+    }).then(function (pages) {
+      var seen = {}, out = [];
+      pages.forEach(function (p) { (p.features || []).forEach(function (f) {
+        var id = f.attributes.OBJECTID;
+        if (!seen[id]) { seen[id] = true; out.push(f); }
+      }); });
+      return out;
+    });
+  }
+
+  function toRecord(f, now) {
+    var a = f.attributes;
+    var sub = a.SUBMITTED_DATE, st = a.RECORD_STATUS_DATE;
+    var group = STATUS_GROUP[a.RECORD_STATUS] || "pending";
+    var statusOk = st != null && sub != null && st >= sub - DAY && st <= now + DAY;
+    var decided = group === "approved" || group === "denied";
+    var decision = decided && statusOk ? st : null;
+    var days = decision != null ? Math.round((decision - sub) / DAY) : null;
+    if (days != null && (days < 0 || days > 7300)) { days = null; decision = null; }
+    var c = f.centroid, lat = null, lng = null;
+    if (c && isFinite(c.x) && isFinite(c.y) && c.x < -76 && c.x > -78.5 && c.y > 38 && c.y < 39.5) { lat = c.y; lng = c.x; }
+    var desc = (a.WORK_DESCRIPTION || "").replace(/\s+/g, " ").trim();
+    var applicant = (a.APPLICANT || "").trim();
+    return {
+      id: a.OBJECTID,
+      caseNo: a.RECORDID || "",
+      typeRaw: a.APPTYPEALIAS || "",
+      type: TYPE_LABELS[a.APPTYPEALIAS] || a.APPTYPEALIAS || "Other",
+      status: a.RECORD_STATUS || "Unknown",
+      group: group,
+      use: classifyUse(desc),
+      submitted: sub,
+      statusDate: statusOk ? st : null,
+      decision: decision,
+      days: days,
+      acres: a.Shape__Area ? a.Shape__Area / 43560 : null,   // layer area is in square feet
+      applicant: applicant,
+      desc: desc,
+      url: safeLink(a.LINK_URL),
+      lat: lat, lng: lng,
+      district: lat != null ? districtAt(lng, lat) : "Unassigned",
+      year: sub != null ? new Date(sub).getUTCFullYear() : null,
+      hay: ((a.RECORDID || "") + " " + applicant + " " + desc).toLowerCase()
+    };
+  }
+
+  // ---------- Filters ----------
+  function setupFilters() {
+    var typeSel = $("f-type");
+    var types = TYPE_ORDER.filter(function (t) { return state.all.some(function (r) { return r.type === t; }); });
+    state.all.forEach(function (r) { if (types.indexOf(r.type) === -1) types.push(r.type); });
+    typeSel.innerHTML = '<option value="all">All application types</option>' + types.map(function (t) {
+      return '<option value="' + esc(t) + '">' + esc(t) + "</option>";
+    }).join("");
+    typeSel.value = DEFAULT_TYPE;
+
+    var dSel = $("f-district");
+    dSel.innerHTML = '<option value="all">All districts</option>' + state.districtNames.map(function (d) {
+      return '<option value="' + esc(d) + '">' + esc(d) + "</option>";
+    }).join("");
+
+    var years = [];
+    for (var y = state.minYear; y <= state.maxYear; y++) years.push(y);
+    var opts = years.map(function (y) { return '<option value="' + y + '">' + y + "</option>"; }).join("");
+    $("f-from").innerHTML = opts; $("f-to").innerHTML = opts;
+    $("f-from").value = state.minYear; $("f-to").value = state.maxYear;
+
+    ["f-type", "f-outcome", "f-district", "f-from", "f-to"].forEach(function (id) {
+      $(id).addEventListener("change", function () {
+        var from = +$("f-from").value, to = +$("f-to").value;
+        if (from > to) { if (id === "f-from") $("f-to").value = from; else $("f-from").value = to; }
+        update(true);
+      });
+    });
+    var t;
+    $("f-search").addEventListener("input", function () { clearTimeout(t); t = setTimeout(function () { update(true); }, 200); });
+    $("use-tabs").addEventListener("click", function (ev) {
+      var b = ev.target.closest && ev.target.closest("button[data-use]");
+      if (!b) return;
+      state.use = b.getAttribute("data-use");
+      update(true);
+    });
+    $("f-reset").addEventListener("click", function () {
+      state.use = "all";
+      $("f-type").value = DEFAULT_TYPE; $("f-outcome").value = "all"; $("f-district").value = "all";
+      $("f-from").value = state.minYear; $("f-to").value = state.maxYear; $("f-search").value = "";
+      update(true);
+    });
+  }
+  function filters() {
+    return {
+      use: state.use,
+      type: $("f-type").value, group: $("f-outcome").value, district: $("f-district").value,
+      from: +$("f-from").value, to: +$("f-to").value,
+      terms: $("f-search").value.toLowerCase().split(/\s+/).filter(Boolean)
+    };
+  }
+  function passes(r, f, ignoreDistrict, ignoreUse) {
+    if (!ignoreUse && f.use !== "all" && r.use !== f.use) return false;
+    if (f.type !== "all" && r.type !== f.type) return false;
+    if (f.group !== "all" && r.group !== f.group) return false;
+    if (!ignoreDistrict && f.district !== "all" && r.district !== f.district) return false;
+    if (r.year == null || r.year < f.from || r.year > f.to) return false;
+    for (var i = 0; i < f.terms.length; i++) if (r.hay.indexOf(f.terms[i]) === -1) return false;
+    return true;
+  }
+
+  // ---------- Proposed-use tabs ----------
+  function renderUseTabs(f) {
+    // Counts reflect every other filter, so each tab shows how many cases it would display.
+    var counts = { all: 0 };
+    USES.forEach(function (u) { counts[u.key] = 0; });
+    state.all.forEach(function (r) { if (passes(r, f, false, true)) { counts.all++; counts[r.use]++; } });
+    var tabs = [{ key: "all", label: "All uses" }].concat(USES);
+    $("use-tabs").innerHTML = tabs.map(function (u) {
+      return '<button type="button" class="use-tab" data-use="' + u.key + '" aria-pressed="' + (state.use === u.key) + '">' +
+        esc(u.label) + '<span class="n">' + fmtInt(counts[u.key]) + "</span></button>";
+    }).join("");
+  }
+
+  // ---------- Summary ----------
+  function summarize(list) {
+    var s = { n: list.length, approved: 0, denied: 0, withdrawn: 0, pending: 0, days: [] };
+    list.forEach(function (r) { s[r.group]++; if (r.days != null) s.days.push(r.days); });
+    s.decided = s.approved + s.denied;
+    s.median = median(s.days);
+    return s;
+  }
+  function renderTiles(list) {
+    var s = summarize(list);
+    $("t-cases").textContent = fmtInt(s.n);
+    $("t-cases-sub").textContent = s.n ? fmtInt(s.decided) + " decided" : " ";
+    $("t-approved").textContent = fmtInt(s.approved);
+    $("t-approved-sub").textContent = s.decided ? "Approval rate " + fmtPct(s.approved, s.decided) : "No decided cases";
+    $("t-denied").textContent = fmtInt(s.denied);
+    $("t-denied-sub").textContent = s.n ? fmtPct(s.denied, s.n) + " of cases" : " ";
+    $("t-withdrawn").textContent = fmtInt(s.withdrawn);
+    $("t-withdrawn-sub").textContent = s.n ? fmtPct(s.withdrawn, s.n) + " of cases" : " ";
+    $("t-pending").textContent = fmtInt(s.pending);
+    $("t-pending-sub").textContent = s.n ? fmtPct(s.pending, s.n) + " of cases" : " ";
+    if (s.median != null) {
+      $("t-days").textContent = (s.median / 30.44).toFixed(1) + " mo";
+      $("t-days-sub").textContent = fmtInt(s.median) + " days, " + fmtInt(s.days.length) + " cases";
+    } else {
+      $("t-days").textContent = "n/a"; $("t-days-sub").textContent = "No decided cases";
+    }
+  }
+
+  // ---------- Map ----------
+  function setupMap(districtGeo) {
+    map = L.map("map", { preferCanvas: true, scrollWheelZoom: false, minZoom: 9 }).setView([38.835, -77.28], 10);
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: "abcd", maxZoom: 19
+    }).addTo(map);
+    // Scroll-wheel zoom turns on only after the visitor clicks the map, so the page scrolls normally.
+    map.on("click", function () { map.scrollWheelZoom.enable(); });
+    map.on("mouseout", function () { map.scrollWheelZoom.disable(); });
+    if (districtGeo) {
+      L.geoJSON(districtGeo, { interactive: false, style: { color: "#5b6573", weight: 1, opacity: 0.55, fill: false } }).addTo(map);
+    }
+    caseLayer = L.layerGroup().addTo(map);
+    map.on("popupclose", clearOutline);
+    // Fit the county once the map has a size.
+    if (districtGeo) { try { map.fitBounds(L.geoJSON(districtGeo).getBounds(), { padding: [10, 10] }); } catch (e) {} }
+  }
+  function popupHtml(r) {
+    var g = GROUP_BY_KEY[r.group];
+    var h = '<div class="popup"><h4>' + esc(r.caseNo) + "</h4>" +
+      '<p class="muted">' + esc(r.typeRaw) + "</p>" +
+      "<dl>" +
+      "<dt>Outcome</dt><dd><span class=\"dot " + r.group + "\"></span> " + esc(g.label) + " (" + esc(r.status) + ")</dd>" +
+      "<dt>Proposed use</dt><dd>" + esc(USE_BY_KEY[r.use].label) + "</dd>" +
+      "<dt>Applicant</dt><dd>" + esc(r.applicant || "Not listed") + "</dd>" +
+      "<dt>District</dt><dd>" + esc(r.district) + "</dd>" +
+      "<dt>Submitted</dt><dd>" + esc(fmtDate(r.submitted)) + "</dd>" +
+      (r.decision != null ? "<dt>Decided</dt><dd>" + esc(fmtDate(r.decision)) + " (" + fmtInt(r.days) + " days)</dd>" :
+        (r.statusDate != null ? "<dt>Status date</dt><dd>" + esc(fmtDate(r.statusDate)) + "</dd>" : "")) +
+      (r.acres != null ? "<dt>Area</dt><dd>" + r.acres.toFixed(1) + " acres</dd>" : "") +
+      "</dl>" +
+      (r.desc ? "<p>" + esc(truncate(r.desc, 320)) + "</p>" : "") +
+      (r.url ? '<p><a href="' + esc(r.url) + '" target="_blank" rel="noopener">Open the county case record</a></p>' : "") +
+      "</div>";
+    return h;
+  }
+  function clearOutline() {
+    outlineToken++;
+    if (outlineLayer) { map.removeLayer(outlineLayer); outlineLayer = null; }
+  }
+  function showOutline(r) {
+    clearOutline();
+    var token = outlineToken;
+    getJSON(CASES_URL + "/query", { f: "geojson", objectIds: String(r.id), outFields: "OBJECTID", outSR: "4326", geometryPrecision: "6" })
+      .then(function (gj) {
+        if (token !== outlineToken) return;
+        outlineLayer = L.geoJSON(gj, { interactive: false, style: { color: "#1d2430", weight: 2, fillColor: "#1d2430", fillOpacity: 0.06 } }).addTo(map);
+        outlineLayer.bringToBack();
+      }).catch(function () {});
+  }
+  function renderMap(list) {
+    if (!map) return;
+    map.closePopup();
+    caseLayer.clearLayers();
+    markersById = {};
+    var order = { withdrawn: 0, approved: 1, denied: 2, pending: 3 };   // draw pending cases on top
+    list.filter(function (r) { return r.lat != null; })
+      .sort(function (a, b) { return order[a.group] - order[b.group]; })
+      .forEach(function (r) {
+        var m = L.circleMarker([r.lat, r.lng], {
+          radius: 5, color: "#ffffff", weight: 1.5, opacity: 1,
+          fillColor: GROUP_BY_KEY[r.group].color, fillOpacity: 0.92
+        });
+        m.bindPopup(function () { return popupHtml(r); }, { maxWidth: 320 });
+        m.on("popupopen", function () { showOutline(r); });
+        m.addTo(caseLayer);
+        markersById[r.id] = m;
+      });
+  }
+  function focusCase(id) {
+    var m = markersById[id];
+    if (!m) return;
+    $("map").scrollIntoView({ behavior: "smooth", block: "center" });
+    map.setView(m.getLatLng(), Math.max(map.getZoom(), 14));
+    setTimeout(function () { m.openPopup(); }, 250);
+  }
+
+  // ---------- Chart: stacked bars by year submitted ----------
+  function niceStep(x) {
+    var p = Math.pow(10, Math.floor(Math.log10(x))), f = x / p;
+    var n = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10;
+    return Math.max(1, n * p);
+  }
+  function yearCounts(list, from, to) {
+    var rows = [];
+    for (var y = from; y <= to; y++) rows.push({ year: y, approved: 0, denied: 0, withdrawn: 0, pending: 0, total: 0 });
+    list.forEach(function (r) {
+      var i = r.year - from;
+      if (i >= 0 && i < rows.length) { rows[i][r.group]++; rows[i].total++; }
+    });
+    return rows;
+  }
+  function roundedTopPath(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h);
+    return "M" + x + "," + (y + h) + "V" + (y + r) + "Q" + x + "," + y + " " + (x + r) + "," + y +
+      "H" + (x + w - r) + "Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + r) + "V" + (y + h) + "Z";
+  }
+  var chartRows = [];
+  function renderChart(list) {
+    var f = filters();
+    var rows = yearCounts(list, f.from, f.to);
+    chartRows = rows;
+    var box = $("chart");
+    var W = Math.max(300, Math.round(box.clientWidth || 860)), H = 260;
+    var m = { t: 10, r: 6, b: 26, l: 40 };
+    var pw = W - m.l - m.r, ph = H - m.t - m.b;
+    var maxV = Math.max(1, Math.max.apply(null, rows.map(function (r) { return r.total; })));
+    var step = niceStep(maxV / 4), top = Math.ceil(maxV / step) * step;
+    var band = pw / rows.length;
+    var bw = Math.max(3, Math.min(22, band * 0.62));
+    var yv = function (v) { return m.t + ph - (v / top) * ph; };
+    var labelEvery = band < 18 ? 5 : band < 34 ? 2 : 1;
+    var GAP = 2;
+
+    var s = '<svg viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Stacked bar chart of cases by year submitted, split by outcome. The same numbers are in the table below the chart.">';
+    for (var t = 0; t <= top + 1e-9; t += step) {
+      var gy = Math.round(yv(t)) + 0.5;
+      s += '<line x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + gy + '" y2="' + gy + '" stroke="' + (t === 0 ? "#c3c2b7" : "#e1e0d9") + '" stroke-width="1"/>';
+      s += '<text x="' + (m.l - 8) + '" y="' + (gy + 4) + '" text-anchor="end" font-size="11" fill="#898781" style="font-variant-numeric:tabular-nums">' + fmtInt(t) + "</text>";
+    }
+    rows.forEach(function (row, i) {
+      var cx = m.l + band * i + band / 2, x = cx - bw / 2;
+      s += '<g class="yr" data-i="' + i + '" tabindex="0" aria-label="' + row.year + ": " + row.total + ' cases">';
+      s += '<rect class="hit" x="' + (m.l + band * i) + '" y="' + m.t + '" width="' + band + '" height="' + ph + '" rx="3"/>';
+      var base = yv(0), stackTop = null;
+      for (var gi = GROUPS.length - 1; gi >= 0; gi--) if (row[GROUPS[gi].key] > 0) { stackTop = GROUPS[gi].key; break; }
+      var cum = 0;
+      GROUPS.forEach(function (g) {
+        var v = row[g.key];
+        if (!v) return;
+        var y0 = yv(cum), y1 = yv(cum + v);
+        var h = y0 - y1;
+        cum += v;
+        if (g.key === stackTop) {
+          s += '<path d="' + roundedTopPath(x, y1, bw, Math.max(1, h), 4) + '" fill="' + g.color + '"/>';
+        } else {
+          var hh = Math.max(1, h - GAP);
+          s += '<rect x="' + x + '" y="' + (y0 - hh) + '" width="' + bw + '" height="' + hh + '" fill="' + g.color + '"/>';
+        }
+      });
+      if (row.year % labelEvery === 0 || rows.length <= 12) {
+        s += '<text x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle" font-size="11" fill="#898781">' + row.year + "</text>";
+      }
+      s += "</g>";
+    });
+    s += "</svg>";
+    box.innerHTML = s;
+
+    var groups = box.querySelectorAll(".yr");
+    Array.prototype.forEach.call(groups, function (gEl) {
+      gEl.addEventListener("mousemove", function (ev) { showTip(+gEl.getAttribute("data-i"), ev); });
+      gEl.addEventListener("mouseleave", hideTip);
+      gEl.addEventListener("focus", function () { showTip(+gEl.getAttribute("data-i"), null, gEl); });
+      gEl.addEventListener("blur", hideTip);
+    });
+
+    // Table view of the same data
+    var tb = '<table><thead><tr><th>Year submitted</th>' + GROUPS.map(function (g) { return "<th>" + esc(g.label) + "</th>"; }).join("") +
+      "<th>Total</th></tr></thead><tbody>";
+    rows.forEach(function (r) {
+      tb += "<tr><td>" + r.year + "</td>" + GROUPS.map(function (g) { return "<td>" + fmtInt(r[g.key]) + "</td>"; }).join("") + "<td>" + fmtInt(r.total) + "</td></tr>";
+    });
+    $("year-table").innerHTML = tb + "</tbody></table>";
+  }
+  function showTip(i, ev, anchorEl) {
+    var row = chartRows[i], tip = $("chart-tip"), box = tip.parentNode;
+    if (!row) return;
+    Array.prototype.forEach.call($("chart").querySelectorAll(".yr"), function (g) { g.classList.toggle("active", +g.getAttribute("data-i") === i); });
+    tip.innerHTML = '<div class="tt-title">' + row.year + " | " + fmtInt(row.total) + " cases</div>" +
+      GROUPS.slice().reverse().map(function (g) {
+        return '<div class="tt-row"><span class="dot ' + g.key + '"></span>' + esc(g.label) + '<span class="n">' + fmtInt(row[g.key]) + "</span></div>";
+      }).join("");
+    tip.style.display = "block";
+    var bRect = box.getBoundingClientRect(), x, y;
+    if (ev) { x = ev.clientX - bRect.left + 14; y = ev.clientY - bRect.top - 10; }
+    else { var a = anchorEl.getBoundingClientRect(); x = a.left - bRect.left + a.width / 2 + 10; y = 10; }
+    var tw = tip.offsetWidth, th = tip.offsetHeight;
+    if (x + tw > bRect.width) x = x - tw - 28;
+    if (x < 0) x = 0;
+    if (y + th > bRect.height) y = bRect.height - th;
+    if (y < 0) y = 0;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  function hideTip() {
+    $("chart-tip").style.display = "none";
+    Array.prototype.forEach.call($("chart").querySelectorAll(".yr.active"), function (g) { g.classList.remove("active"); });
+  }
+
+  // ---------- District table ----------
+  function renderDistrictTable(list) {
+    var names = state.districtNames.slice();
+    if (list.some(function (r) { return r.district === "Unassigned"; })) names.push("Unassigned");
+    var rows = names.map(function (d) { var s = summarize(list.filter(function (r) { return r.district === d; })); s.name = d; return s; });
+    var tot = summarize(list); tot.name = "All districts";
+    var h = "<table><thead><tr><th>District</th><th>Cases</th><th>Approved</th><th>Denied</th><th>Withdrawn or inactive</th><th>Pending</th><th>Approval rate</th><th>Median days to decision</th></tr></thead><tbody>";
+    rows.concat([tot]).forEach(function (s, i) {
+      h += "<tr" + (i === rows.length ? ' class="total"' : "") + "><td>" + esc(s.name) + "</td><td>" + fmtInt(s.n) + "</td><td>" + fmtInt(s.approved) + "</td><td>" +
+        fmtInt(s.denied) + "</td><td>" + fmtInt(s.withdrawn) + "</td><td>" + fmtInt(s.pending) + "</td><td>" + fmtPct(s.approved, s.decided) + "</td><td>" +
+        (s.median != null ? fmtInt(s.median) : "n/a") + "</td></tr>";
+    });
+    $("district-table").innerHTML = h + "</tbody></table>";
+  }
+
+  // ---------- Case table ----------
+  var COLUMNS = [
+    { key: "caseNo", label: "Case", cls: "text" },
+    { key: "applicant", label: "Applicant and description", cls: "text" },
+    { key: "district", label: "District", cls: "text" },
+    { key: "submitted", label: "Submitted" },
+    { key: "group", label: "Outcome", cls: "text" },
+    { key: "decision", label: "Decided" },
+    { key: "days", label: "Days" },
+    { key: "acres", label: "Acres" }
+  ];
+  function sortList(list) {
+    var k = state.sort.key, dir = state.sort.dir;
+    var gOrder = { approved: 0, denied: 1, withdrawn: 2, pending: 3 };
+    return list.slice().sort(function (a, b) {
+      var va = k === "group" ? gOrder[a.group] : a[k], vb = k === "group" ? gOrder[b.group] : b[k];
+      var na = va == null || va === "", nb = vb == null || vb === "";
+      if (na && nb) return 0;
+      if (na) return 1;           // empty values always sort last
+      if (nb) return -1;
+      if (typeof va === "string") return dir * va.localeCompare(vb, "en", { numeric: true });
+      return dir * (va - vb);
+    });
+  }
+  function renderCaseTable(list) {
+    var sorted = sortList(list);
+    var pages = Math.max(1, Math.ceil(sorted.length / ROWS_PER_PAGE));
+    if (state.page > pages) state.page = pages;
+    var start = (state.page - 1) * ROWS_PER_PAGE;
+    var rows = sorted.slice(start, start + ROWS_PER_PAGE);
+
+    if (!sorted.length) {
+      $("case-table").innerHTML = '<p class="empty">No cases match these filters.</p>';
+      $("pager").innerHTML = "";
+      return;
+    }
+    var h = '<table class="cases-table"><thead><tr>' + COLUMNS.map(function (c) {
+      var sortAttr = state.sort.key === c.key ? ' aria-sort="' + (state.sort.dir === 1 ? "ascending" : "descending") + '"' : "";
+      return '<th class="' + (c.cls || "") + '"' + sortAttr + '><button type="button" data-sort="' + c.key + '">' + esc(c.label) + "</button></th>";
+    }).join("") + "</tr></thead><tbody>";
+    rows.forEach(function (r) {
+      var g = GROUP_BY_KEY[r.group];
+      h += "<tr>" +
+        '<td class="text case">' + (r.url ? '<a href="' + esc(r.url) + '" target="_blank" rel="noopener" title="Open the county case record">' + esc(r.caseNo) + "</a>" : esc(r.caseNo)) +
+          '<span class="sub-type">' + esc(r.type) + "</span>" +
+          '<span class="sub-use">' + esc(USE_BY_KEY[r.use].label) + "</span>" +
+          '<button type="button" class="map-btn" data-id="' + r.id + '"' + (r.lat == null ? " disabled" : "") + ' aria-label="Show ' + esc(r.caseNo) + ' on the map">Map</button></td>' +
+        '<td class="desc">' + esc(r.applicant || "Applicant not listed") + (r.desc ? '<span class="d">' + esc(truncate(r.desc, 140)) + "</span>" : "") + "</td>" +
+        '<td class="dist">' + esc(r.district) + "</td>" +
+        "<td>" + esc(isoDate(r.submitted)) + "</td>" +
+        '<td class="outcome"><span class="o"><span class="dot ' + r.group + '"></span>' + esc(g.label) + "</span>" +
+          (r.status !== g.label ? '<span class="raw">' + esc(r.status) + "</span>" : "") + "</td>" +
+        "<td>" + esc(isoDate(r.decision)) + "</td>" +
+        "<td>" + (r.days != null ? fmtInt(r.days) : "") + "</td>" +
+        "<td>" + (r.acres != null ? r.acres.toFixed(1) : "") + "</td>" +
+        "</tr>";
+    });
+    $("case-table").innerHTML = h + "</tbody></table>";
+
+    $("pager").innerHTML =
+      '<button type="button" class="btn-small" id="pg-prev"' + (state.page <= 1 ? " disabled" : "") + ">Previous</button>" +
+      "<span>Page " + state.page + " of " + pages + "</span>" +
+      '<button type="button" class="btn-small" id="pg-next"' + (state.page >= pages ? " disabled" : "") + ">Next</button>" +
+      "<span>Showing " + fmtInt(start + 1) + " to " + fmtInt(start + rows.length) + " of " + fmtInt(sorted.length) + "</span>" +
+      '<span class="spacer"></span><button type="button" class="btn-small" id="dl-csv">Download filtered cases (CSV)</button>';
+    $("pg-prev").onclick = function () { state.page--; renderCaseTable(state.filtered); };
+    $("pg-next").onclick = function () { state.page++; renderCaseTable(state.filtered); };
+    $("dl-csv").onclick = downloadCSV;
+  }
+  document.addEventListener("click", function (ev) {
+    var sb = ev.target.closest && ev.target.closest("button[data-sort]");
+    if (sb) {
+      var k = sb.getAttribute("data-sort");
+      if (state.sort.key === k) state.sort.dir *= -1;
+      else state.sort = { key: k, dir: (k === "submitted" || k === "decision" || k === "days" || k === "acres") ? -1 : 1 };
+      state.page = 1;
+      renderCaseTable(state.filtered);
+      return;
+    }
+    var mb = ev.target.closest && ev.target.closest("button.map-btn");
+    if (mb && !mb.disabled) focusCase(+mb.getAttribute("data-id"));
+  });
+
+  function downloadCSV() {
+    var cols = [
+      ["case_number", "caseNo"], ["application_type", "typeRaw"], ["proposed_use", "use"], ["county_status", "status"], ["outcome_group", "group"],
+      ["applicant", "applicant"], ["supervisor_district", "district"], ["submitted_date", "submitted"], ["status_date", "statusDate"],
+      ["decision_date", "decision"], ["days_to_decision", "days"], ["acres", "acres"], ["latitude", "lat"], ["longitude", "lng"],
+      ["description", "desc"], ["county_record_url", "url"]
+    ];
+    var dateKeys = { submitted: 1, statusDate: 1, decision: 1 };
+    var q = function (v) { v = v == null ? "" : String(v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var lines = [cols.map(function (c) { return c[0]; }).join(",")];
+    sortList(state.filtered).forEach(function (r) {
+      lines.push(cols.map(function (c) {
+        var v = r[c[1]];
+        if (dateKeys[c[1]]) v = isoDate(v);
+        else if (c[1] === "acres" && v != null) v = v.toFixed(2);
+        return q(v);
+      }).join(","));
+    });
+    var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "fairfax_zoning_cases_" + isoDate(Date.now()) + ".csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+
+  // ---------- Status crosswalk ----------
+  function renderCrosswalk() {
+    var counts = {};
+    state.all.forEach(function (r) { counts[r.status] = (counts[r.status] || 0) + 1; });
+    var statuses = Object.keys(counts).sort(function (a, b) {
+      var ga = GROUPS.indexOf(GROUP_BY_KEY[STATUS_GROUP[a] || "pending"]), gb = GROUPS.indexOf(GROUP_BY_KEY[STATUS_GROUP[b] || "pending"]);
+      return ga - gb || counts[b] - counts[a];
+    });
+    var h = "<table><thead><tr><th>County status</th><th>Outcome group on this page</th><th>Cases (all types)</th></tr></thead><tbody>";
+    statuses.forEach(function (st) {
+      h += "<tr><td>" + esc(st) + "</td><td style=\"text-align:left\">" + esc(GROUP_BY_KEY[STATUS_GROUP[st] || "pending"].label) + "</td><td>" + fmtInt(counts[st]) + "</td></tr>";
+    });
+    $("crosswalk").innerHTML = h + "</tbody></table>";
+  }
+
+  // ---------- Update everything ----------
+  function update(resetPage) {
+    var f = filters();
+    state.filtered = state.all.filter(function (r) { return passes(r, f, false); });
+    if (resetPage) state.page = 1;
+    renderUseTabs(f);
+    renderTiles(state.filtered);
+    renderMap(state.filtered);
+    renderChart(state.filtered);
+    renderDistrictTable(state.all.filter(function (r) { return passes(r, f, true); }));
+    renderCaseTable(state.filtered);
+    $("status").textContent = "Showing " + fmtInt(state.filtered.length) + " of " + fmtInt(state.all.length) +
+      " zoning cases. See “About the data” above for the source and last update.";
+  }
+
+  // ---------- About the data: last update ----------
+  function fmtEastern(ms) {
+    return new Date(ms).toLocaleString("en-US", {
+      timeZone: "America/New_York", month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit"
+    });
+  }
+  function loadLastUpdate() {
+    // The layer's own metadata records when the county last changed its data.
+    getJSON(CASES_URL, { f: "json" }).then(function (info) {
+      var e = info.editingInfo || {};
+      var t = e.dataLastEditDate || e.lastEditDate;
+      $("d-county").textContent = t ? fmtEastern(t) : "Not reported by the county";
+    }).catch(function () { $("d-county").textContent = "Could not be checked"; });
+  }
+  function fillLoadInfo() {
+    var latest = Math.max.apply(null, state.all.map(function (r) { return r.submitted || 0; }));
+    $("d-loaded").textContent = fmtEastern(state.loadedAt.getTime());
+    $("d-latest").textContent = latest ? fmtDate(latest) : "Not available";
+  }
+
+  // The "How cases are sorted" link opens the explanation below the case list.
+  document.addEventListener("click", function (ev) {
+    var a = ev.target.closest && ev.target.closest('a[href="#use-rules"]');
+    if (a) $("use-rules").open = true;
+  });
+
+  var resizeT;
+  window.addEventListener("resize", function () {
+    clearTimeout(resizeT);
+    resizeT = setTimeout(function () { if (state.all.length) renderChart(state.filtered); }, 150);
+  });
+
+  function start() {
+    $("status").classList.remove("error");
+    $("status").textContent = "Loading cases from Fairfax County...";
+    loadLastUpdate();
+    var districtGeo = null;
+    loadDistricts().catch(function () { return null; }).then(function (gj) {
+      districtGeo = gj;
+      state.districts = gj && gj.features ? prepDistricts(gj) : [];
+      state.districtNames = state.districts.map(function (d) { return d.name; }).sort();
+      return loadCases();
+    }).then(function (features) {
+      var now = Date.now();
+      state.loadedAt = new Date(now);
+      state.all = features.map(function (f) { return toRecord(f, now); }).filter(function (r) { return r.submitted != null; });
+      var years = state.all.map(function (r) { return r.year; });
+      state.minYear = Math.min.apply(null, years);
+      state.maxYear = Math.max(Math.max.apply(null, years), new Date().getFullYear());
+      if (typeof L !== "undefined") { if (!map) setupMap(districtGeo); }
+      else $("map").innerHTML = '<p class="empty" style="padding:16px">The map library did not load. The tables below still work.</p>';
+      if (!state.filtersReady) { setupFilters(); state.filtersReady = true; }
+      renderCrosswalk();
+      fillLoadInfo();
+      update(true);
+    }).catch(function (err) {
+      $("d-loaded").textContent = "Data did not load";
+      $("d-latest").textContent = "Not available";
+      $("status").classList.add("error");
+      $("status").innerHTML = "Could not load data from Fairfax County's map service (" + esc(err.message) +
+        "). The county's server may be down for maintenance. <button type=\"button\" class=\"btn-small\" id=\"retry\">Try again</button>";
+      $("retry").onclick = start;
+    });
+  }
+  start();
+})();
+</script>
+
+</body>
+</html>
